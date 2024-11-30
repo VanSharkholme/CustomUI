@@ -50,3 +50,25 @@ void ClearButtonCallback(lv_event_t *event)
 {
     clear_all_channels();
 }
+
+void PrevPageBtnCallback(lv_event_t *event)
+{
+    current_page_num = ((current_page_num - 1) % UI_SCHEME_PAGE_NUM + UI_SCHEME_PAGE_NUM) % UI_SCHEME_PAGE_NUM;
+    lv_obj_t *btn = lv_event_get_target(event);
+    lv_obj_t *container = lv_obj_get_parent(btn);
+    lv_obj_t *page_num_label = lv_obj_get_child(container, 1);
+    lv_obj_t *scheme_set_list_container = lv_obj_get_user_data(btn);
+    set_scheme_set_page(scheme_set_list_container, current_page_num);
+    lv_label_set_text_fmt(page_num_label, "第%d:%d页", current_page_num + 1, UI_SCHEME_PAGE_NUM);
+}
+
+void NextPageBtnCallback(lv_event_t *event)
+{
+    current_page_num = (current_page_num + 1) % UI_SCHEME_PAGE_NUM;
+    lv_obj_t *btn = lv_event_get_target(event);
+    lv_obj_t *container = lv_obj_get_parent(btn);
+    lv_obj_t *page_num_label = lv_obj_get_child(container, 1);
+    lv_obj_t *scheme_set_list_container = lv_obj_get_user_data(btn);
+    set_scheme_set_page(scheme_set_list_container, current_page_num);
+    lv_label_set_text_fmt(page_num_label, "第%d:%d页", current_page_num + 1, UI_SCHEME_PAGE_NUM);
+}

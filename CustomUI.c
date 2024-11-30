@@ -18,6 +18,13 @@ lv_obj_t *lv_channel_b;
 lv_obj_t *lv_channel_c;
 lv_obj_t *lv_channel_d;
 
+SchemePage schemePages[UI_SCHEME_PAGE_NUM];
+pSchemeSet page1[UI_SCHEME_SET_NUM_PER_PAGE];
+pSchemeSet page2[UI_SCHEME_SET_NUM_PER_PAGE];
+pSchemeSet page3[UI_SCHEME_SET_NUM_PER_PAGE];
+uint8_t current_page_num = 0;
+
+
 void Channel_Struct_Init(Channel *channel, char *name) {
     channel->name = name;
     channel->plan = NULL;
@@ -278,6 +285,44 @@ lv_obj_t *create_scheme_set(lv_obj_t *parent, SchemeSet *schemeSet) {
     return scheme_set_dropdown;
 }
 
+void init_scheme_pages()
+{
+//    page1[6] = {schemeSet1, schemeSet2, schemeSet3, schemeSet4, schemeSet5, schemeSet6};
+    page1[0] = &schemeSet1;
+    page1[1] = &schemeSet2;
+    page1[2] = &schemeSet3;
+    page1[3] = &schemeSet4;
+    page1[4] = &schemeSet5;
+    page1[5] = &schemeSet6;
+
+//    page2[6] = {schemeSet7, schemeSet8, schemeSet9, schemeSet10, schemeSet11, schemeSet12};
+    page2[0] = &schemeSet7;
+    page2[1] = &schemeSet8;
+    page2[2] = &schemeSet9;
+    page2[3] = &schemeSet10;
+    page2[4] = &schemeSet11;
+    page2[5] = &schemeSet12;
+
+//    page3[6] = {schemeSet1, schemeSet2, schemeSet3, schemeSet4, schemeSet5};
+    page3[0] = &schemeSet1;
+    page3[1] = &schemeSet2;
+    page3[2] = &schemeSet3;
+    page3[3] = &schemeSet4;
+    page3[4] = &schemeSet5;
+}
+
+void set_scheme_set_page(lv_obj_t *container, uint8_t page)
+{
+    page = page % 3;
+    lv_obj_clean(container);
+    SchemePage current_page = schemePages[page];
+    for (uint8_t i = 0; i < UI_SCHEME_SET_NUM_PER_PAGE; ++i) {
+        if (current_page[i])
+            create_scheme_set(container, current_page[i]);
+    }
+
+}
+
 lv_obj_t *create_scheme_scr() {
     lv_obj_t *scr = lv_img_create(NULL);
     lv_img_set_src(scr, &BG3_fit);
@@ -305,23 +350,57 @@ lv_obj_t *create_scheme_scr() {
     lv_obj_align(scheme_title, LV_ALIGN_TOP_LEFT, 0, 0);
 
     //----- Scheme List Container -----
-    lv_obj_t *scheme_list_container = lv_obj_create(scheme_container);
-    lv_obj_set_size(scheme_list_container, LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_set_flex_flow(scheme_list_container, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_align(scheme_list_container, LV_ALIGN_TOP_MID, 0, 40);
-    lv_obj_set_style_bg_opa(scheme_list_container, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_opa(scheme_list_container, LV_OPA_TRANSP, 0);
+    lv_obj_t *scheme_set_list_container = lv_obj_create(scheme_container);
+    lv_obj_set_size(scheme_set_list_container, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(scheme_set_list_container, LV_FLEX_FLOW_COLUMN_WRAP);
+    lv_obj_align(scheme_set_list_container, LV_ALIGN_TOP_MID, 0, 40);
+    lv_obj_set_style_bg_opa(scheme_set_list_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(scheme_set_list_container, LV_OPA_TRANSP, 0);
 
-    create_scheme_set(scheme_list_container, &schemeSet1);
-    create_scheme_set(scheme_list_container, &schemeSet2);
-    create_scheme_set(scheme_list_container, &schemeSet3);
-    create_scheme_set(scheme_list_container, &schemeSet4);
-    create_scheme_set(scheme_list_container, &schemeSet5);
-    create_scheme_set(scheme_list_container, &schemeSet6);
-    create_scheme_set(scheme_list_container, &schemeSet7);
-    create_scheme_set(scheme_list_container, &schemeSet8);
-    create_scheme_set(scheme_list_container, &schemeSet9);
-    create_scheme_set(scheme_list_container, &schemeSet10);
+    init_scheme_pages();
+
+    schemePages[0] = page1;
+    schemePages[1] = page2;
+    schemePages[2] = page3;
+    set_scheme_set_page(scheme_set_list_container, current_page_num);
+
+    //----- Page Indicator Container -----
+    lv_obj_t *page_indicator_container = lv_obj_create(scheme_container);
+    lv_obj_set_size(page_indicator_container, LV_PCT(100), 50);
+    lv_obj_align(page_indicator_container, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_flex_flow(page_indicator_container, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(page_indicator_container, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_bg_opa(page_indicator_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(page_indicator_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_scrollbar_mode(page_indicator_container, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(page_indicator_container, LV_OBJ_FLAG_SCROLLABLE);
+
+    //----- Previous Page Button -----
+    lv_obj_t *prev_page_btn = lv_btn_create(page_indicator_container);
+    lv_obj_set_size(prev_page_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_color(prev_page_btn, lv_color_hex(0x2ea69b), 0);
+
+    lv_obj_t *prev_page_label = lv_label_create(prev_page_btn);
+    lv_label_set_text(prev_page_label, "上一页");
+    lv_obj_set_style_text_font(prev_page_label, &AliPuHui_20, 0);
+    lv_obj_add_event_cb(prev_page_btn, PrevPageBtnCallback, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_user_data(prev_page_btn, scheme_set_list_container);
+
+    //----- Current Page Label -----
+    lv_obj_t *current_page_label = lv_label_create(page_indicator_container);
+    lv_label_set_text_fmt(current_page_label, "第%d:%d页", current_page_num + 1, UI_SCHEME_PAGE_NUM);
+    lv_obj_set_style_text_font(current_page_label, &AliPuHui_20, 0);
+
+    //----- Next Page Button -----
+    lv_obj_t *next_page_btn = lv_btn_create(page_indicator_container);
+    lv_obj_set_size(next_page_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_color(next_page_btn, lv_color_hex(0x2ea69b), 0);
+
+    lv_obj_t *next_page_label = lv_label_create(next_page_btn);
+    lv_label_set_text(next_page_label, "下一页");
+    lv_obj_set_style_text_font(next_page_label, &AliPuHui_20, 0);
+    lv_obj_add_event_cb(next_page_btn, NextPageBtnCallback, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_user_data(next_page_btn, scheme_set_list_container);
 
     return scr;
 }

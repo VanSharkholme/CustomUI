@@ -52,6 +52,9 @@ LV_FONT_DECLARE(AliPuHui_50)
 
 #define UI_CURRENT_ARC_LINE_WIDTH 6
 
+#define UI_SCHEME_PAGE_NUM 3
+#define UI_SCHEME_SET_NUM_PER_PAGE 6
+
 typedef enum {
     UI_CHANNEL_STATE_DISABLED,
     UI_CHANNEL_STATE_NOT_ADDED,
@@ -91,8 +94,10 @@ typedef struct {
     char *name;
     Plan *plans;
     uint8_t plan_num;
-
 } SchemeSet;
+
+typedef SchemeSet * pSchemeSet;
+typedef pSchemeSet * SchemePage;
 
 extern lv_obj_t *main_scr;
 extern lv_obj_t *scheme_scr;
@@ -106,11 +111,14 @@ extern SchemeSet schemeSet7;
 extern SchemeSet schemeSet8;
 extern SchemeSet schemeSet9;
 extern SchemeSet schemeSet10;
+extern SchemeSet schemeSet11;
+extern SchemeSet schemeSet12;
 
-
+extern uint8_t current_page_num;
 
 void clear_all_channels();
 void set_channel_state(lv_obj_t *channel, ChannelState state);
+void set_scheme_set_page(lv_obj_t *container, uint8_t page);
 void CustomUI();
 
 #endif //LVGL_CUSTOMUI_H
