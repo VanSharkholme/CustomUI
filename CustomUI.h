@@ -5,7 +5,11 @@
 #ifndef LVGL_CUSTOMUI_H
 #define LVGL_CUSTOMUI_H
 
+#ifdef LV_LVGL_H_INCLUDE_SIMPLE
+#include "lvgl.h"
+#else
 #include "lvgl/lvgl.h"
+#endif
 #include "stdio.h"
 #include "Callbacks.h"
 
