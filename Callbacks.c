@@ -266,6 +266,8 @@ void BluetoothBtnCallback(lv_event_t *event)
     lv_obj_t *keyboard = lv_keyboard_create(modal_bg);
     lv_obj_set_size(keyboard,LV_PCT(100), 300);
     lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_event_cb(keyboard, lv_keyboard_def_event_cb);
+    lv_obj_add_event_cb(keyboard, lv_keyboard_def_event_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *bluetooth_name_input = lv_textarea_create(bluetooth_container);
     lv_textarea_set_placeholder_text(bluetooth_name_input, "请输入蓝牙名称");
