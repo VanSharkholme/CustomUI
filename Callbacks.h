@@ -19,9 +19,14 @@ void ImgBtnReleasedCallback(lv_event_t *event);
 void AddSchemeBtnCallback(lv_event_t *event);
 void BackBtnCallback(lv_event_t *event);
 void SchemeDropdownCallback(lv_event_t *event);
-void ClearButtonCallback(lv_event_t *event);
+void ClearBtnCallback(lv_event_t *event);
 void PrevPageBtnCallback(lv_event_t *event);
 void NextPageBtnCallback(lv_event_t *event);
+void SyncAdjustBtnCallback(lv_event_t *event);
+void AddCurrentBtnCallback(lv_event_t *event);
+void SubCurrentBtnCallback(lv_event_t *event);
+void CalibBtnCallback(lv_event_t *event);
+void BluetoothBtnCallback(lv_event_t *event);
 
 
 #endif //LVGL_CALLBACKS_H

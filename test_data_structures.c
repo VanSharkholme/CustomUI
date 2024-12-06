@@ -4,36 +4,31 @@
 
 #include "CustomUI.h"
 
-Plan test_plans[5] = {
+Plan test_plans[5] ={
         {
             .name = "肌力增强--上臂",
             .current_mA = 20,
-            .timer_min = 30,
-            .timer_sec = 15
+            .total_time_min = 60
         },
         {
             .name = "肌力增强--上臂",
             .current_mA = 15,
-            .timer_min = 20,
-            .timer_sec = 30
+            .total_time_min = 25
         },
         {
             .name = "肌力增强--上臂",
             .current_mA = 30,
-            .timer_min = 10,
-            .timer_sec = 45
+            .total_time_min = 10,
         },
         {
             .name = "肌力增强--上臂",
             .current_mA = 25,
-            .timer_min = 15,
-            .timer_sec = 20
+            .total_time_min = 15,
         },
         {
             .name = "肌力增强--上臂",
             .current_mA = 10,
-            .timer_min = 35,
-            .timer_sec = 10
+            .total_time_min = 35,
         }
 };
 
