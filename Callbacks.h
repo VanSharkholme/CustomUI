@@ -27,6 +27,10 @@ void AddCurrentBtnCallback(lv_event_t *event);
 void SubCurrentBtnCallback(lv_event_t *event);
 void CalibBtnCallback(lv_event_t *event);
 void BluetoothBtnCallback(lv_event_t *event);
+void ChildLockBtnCallback(lv_event_t *event);
+void TimerLabelClickCallback(lv_event_t *event);
+void StimulationStartBtnCallback(lv_event_t *event);
+void ChannelLabelClickCallback(lv_event_t *event);
 
 
 #endif //LVGL_CALLBACKS_H

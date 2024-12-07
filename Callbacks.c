@@ -295,6 +295,149 @@ void BluetoothBtnCallback(lv_event_t *event)
     lv_obj_add_event_cb(confirm_btn, ImgBtnPressedCallback, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(confirm_btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
 
+}
+
+void ChildLockBtnCallback(lv_event_t *event)
+{
+    lv_obj_t *btn = lv_event_get_target(event);
+    bool *is_locked = (bool *)lv_obj_get_user_data(btn);
+    *is_locked = !(*is_locked);
+    if (*is_locked) {
+        lv_imgbtn_set_src(btn, LV_IMGBTN_STATE_RELEASED, NULL, &LockButton_Black_fit, NULL);
+        lv_obj_align(btn, LV_ALIGN_LEFT_MID, -10, 0);
+        lv_obj_set_size(btn, LockButton_Black_fit.header.w, LockButton_Black_fit.header.h);
+        for (int i = 0; i < 4; ++i) {
+            lv_obj_t *channel = get_channel_by_index(i);
+            set_channel_state(channel, UI_CHANNEL_STATE_DISABLED);
+        }
+
+        lv_obj_t *clear_btn = lv_obj_get_child(main_scr, 1);
+        lv_obj_clear_flag(clear_btn, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_t *sync_adjust_btn = lv_obj_get_child(main_scr, 2);
+        lv_obj_clear_flag(sync_adjust_btn, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_t *start_btn = lv_obj_get_child(main_scr, 3);
+        lv_imgbtn_set_src(start_btn, LV_IMGBTN_STATE_RELEASED, NULL, &StartButton_Gray_fit, NULL);
+        lv_obj_clear_flag(start_btn, LV_OBJ_FLAG_CLICKABLE);
+    }
+    else {
+        lv_imgbtn_set_src(btn, LV_IMGBTN_STATE_RELEASED, NULL, &LockIconTransparent_fit, NULL);
+        lv_obj_set_size(btn, LockIconTransparent_fit.header.w, LockIconTransparent_fit.header.h);
+        lv_obj_align(btn, LV_ALIGN_LEFT_MID, 0, 0);
+        for (int i = 0; i < 4; ++i) {
+            lv_obj_t *channel = get_channel_by_index(i);
+            UI_Channel *ch = (UI_Channel*)lv_obj_get_user_data(channel);
+            set_channel_state(channel, ch->prev_state);
+        }
+
+        lv_obj_t *clear_btn = lv_obj_get_child(main_scr, 1);
+        lv_obj_add_flag(clear_btn, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_t *sync_adjust_btn = lv_obj_get_child(main_scr, 2);
+        lv_obj_add_flag(sync_adjust_btn, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_t *start_btn = lv_obj_get_child(main_scr, 3);
+        lv_imgbtn_set_src(start_btn, LV_IMGBTN_STATE_RELEASED, NULL, &StartButton_Green_fit, NULL);
+        lv_obj_add_flag(start_btn, LV_OBJ_FLAG_CLICKABLE);
+    }
+}
+
+void TimerLabelClickCallback(lv_event_t *event)
+{
+    lv_obj_t *channel = lv_event_get_user_data(event);
+    UI_Channel *ch = (UI_Channel*)lv_obj_get_user_data(channel);
+    if (ch->timer.state == UI_TIMER_STATE_STOP)
+        set_channel_timer_state(channel, UI_TIMER_STATE_START);
+    else
+        set_channel_timer_state(channel, UI_TIMER_STATE_STOP);
+
+}
+
+void StimulationStartBtnCallback(lv_event_t *event)
+{
+    lv_obj_t *btn = lv_event_get_target(event);
+    bool *is_stimulation_running = (bool *)lv_obj_get_user_data(btn);
+    *is_stimulation_running = !(*is_stimulation_running);
+    if (*is_stimulation_running) {
+        lv_imgbtn_set_src(btn, LV_IMGBTN_STATE_RELEASED, NULL, &PauseButton_fit, NULL);
+        for (int i = 0; i < 4; ++i) {
+            lv_obj_t *channel = get_channel_by_index(i);
+            UI_Channel *ch = (UI_Channel *) lv_obj_get_user_data(channel);
+            if (ch->state == UI_CHANNEL_STATE_ADDED && ch->timer.state == UI_TIMER_STATE_STOP)
+                set_channel_timer_state(channel, UI_TIMER_STATE_START);
+        }
+    }
+    else {
+        lv_imgbtn_set_src(btn, LV_IMGBTN_STATE_RELEASED, NULL, &StartButton_Green_fit, NULL);
+        for (int i = 0; i < 4; ++i) {
+            lv_obj_t *channel = get_channel_by_index(i);
+            UI_Channel *ch = (UI_Channel *) lv_obj_get_user_data(channel);
+            if (ch->state == UI_CHANNEL_STATE_ADDED && ch->timer.state == UI_TIMER_STATE_START)
+                set_channel_timer_state(channel, UI_TIMER_STATE_STOP);
+        }
+    }
+}
+
+void ModalDelCallback(lv_event_t *event)
+{
+    lv_obj_t *obj = lv_event_get_target(event);
+    lv_obj_del_async(obj);
+}
+
+void ChannelLabelClickCallback(lv_event_t *event)
+{
+    lv_obj_t *channel = lv_event_get_user_data(event);
+    UI_Channel *ch = (UI_Channel*)lv_obj_get_user_data(channel);
+    Plan *pPlan = ch->pPlan;
+
+    lv_obj_t *modal_container = lv_obj_create(main_scr);
+    lv_obj_set_size(modal_container, lv_obj_get_width(main_scr), lv_obj_get_height(main_scr));
+    lv_obj_set_style_bg_opa(modal_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_pad_all(modal_container, 0, 0);
+    lv_obj_set_style_border_width(modal_container, 0, 0);
+    lv_obj_add_flag(modal_container, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(modal_container, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_event_cb(modal_container, ModalDelCallback, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *modal_bg = lv_obj_create(modal_container);
+    lv_obj_set_size(modal_bg,LV_PCT(100), 500);
+    lv_obj_align(modal_bg, LV_ALIGN_BOTTOM_MID, 0, 40);
+    lv_obj_set_style_bg_color(modal_bg, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(modal_bg, LV_OPA_80, 0);
+    lv_obj_set_style_border_width(modal_bg, 0, 0);
+    lv_obj_set_style_pad_all(modal_bg, 0, 0);
+    lv_obj_set_style_radius(modal_bg, 50, 0);
+
+    lv_obj_t *title_label = lv_label_create(modal_bg);
+    lv_label_set_text(title_label, "方案详情:");
+    lv_obj_set_style_text_font(title_label, &AliPuHui_30, 0);
+    lv_obj_set_style_text_color(title_label, lv_color_white(), 0);
+    lv_obj_align(title_label, LV_ALIGN_TOP_LEFT, 30, 30);
+
+    lv_obj_t *plan_name_label = lv_label_create(modal_bg);
+    lv_label_set_text_fmt(plan_name_label, "方案名称: %s", pPlan->name);
+    lv_obj_set_style_text_font(plan_name_label, &AliPuHui_28, 0);
+    lv_obj_set_style_text_color(plan_name_label, lv_color_white(), 0);
+    lv_obj_align(plan_name_label, LV_ALIGN_TOP_LEFT, 30, 80);
+
+    lv_obj_t *wave_type_label = lv_label_create(modal_bg);
+    lv_label_set_text(wave_type_label, "波形:");
+    lv_obj_set_style_text_font(wave_type_label, &AliPuHui_28, 0);
+    lv_obj_set_style_text_color(wave_type_label, lv_color_white(), 0);
+    lv_obj_align(wave_type_label, LV_ALIGN_TOP_LEFT, 30, 120);
+
+    lv_obj_t *freq_label = lv_label_create(modal_bg);
+    lv_label_set_text_fmt(freq_label, "频率: %d Hz", pPlan->freq_min);
+    lv_obj_set_style_text_font(freq_label, &AliPuHui_28, 0);
+    lv_obj_set_style_text_color(freq_label, lv_color_white(), 0);
+    lv_obj_align(freq_label, LV_ALIGN_TOP_LEFT, 30, 160);
+
+    lv_obj_t *pulse_width_label = lv_label_create(modal_bg);
+    lv_label_set_text_fmt(pulse_width_label, "脉宽: %d us", pPlan->pulse_width);
+    lv_obj_set_style_text_font(pulse_width_label, &AliPuHui_28, 0);
+    lv_obj_set_style_text_color(pulse_width_label, lv_color_white(), 0);
+    lv_obj_align(pulse_width_label, LV_ALIGN_TOP_LEFT, 30, 200);
 
 
 }

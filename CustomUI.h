@@ -54,9 +54,8 @@ LV_FONT_DECLARE(AliPuHui_28)
 LV_FONT_DECLARE(AliPuHui_30)
 LV_FONT_DECLARE(AliPuHui_40)
 LV_FONT_DECLARE(AliPuHui_50)
+LV_FONT_DECLARE(AliPuHui_70)
 
-#define UI_TIMER_STOP_STATE LV_STATE_USER_1
-#define UI_TIMER_START_STATE LV_STATE_USER_2
 
 #define UI_CURRENT_ARC_LINE_WIDTH 6
 
@@ -73,7 +72,7 @@ typedef enum {
 typedef enum {
     UI_TIMER_STATE_STOP,
     UI_TIMER_STATE_START,
-    UI_TIMER_STATE_PAUSE
+//    UI_TIMER_STATE_PAUSE
 } UI_ChannelTimerState;
 
 typedef struct {
@@ -94,6 +93,7 @@ typedef struct {
     char *name;
     uint8_t index;
     UI_ChannelState state;
+    UI_ChannelState prev_state;
     UI_ChannelTimer timer;
 //    UI_Plan *p_uiplan;
     Plan *pPlan;
@@ -130,8 +130,9 @@ extern uint8_t current_page_num;
 void clear_all_channels();
 void set_channel_state(lv_obj_t *channel, UI_ChannelState state);
 void set_scheme_set_page(lv_obj_t *container, uint8_t page);
-void refresh_channel_current(lv_obj_t *current_container, uint8_t difference);
+void refresh_channel_current(lv_obj_t *current_container, int8_t difference);
 lv_obj_t *get_channel_by_index(uint8_t index);
+void set_channel_timer_state(lv_obj_t *channel, UI_ChannelTimerState state);
 void CustomUI();
 
 #endif //LVGL_CUSTOMUI_H

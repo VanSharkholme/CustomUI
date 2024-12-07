@@ -7,6 +7,7 @@
 lv_obj_t *main_scr;
 lv_obj_t *scheme_scr;
 lv_obj_t *calib_scr;
+lv_obj_t *charging_scr;
 
 UI_Channel ChannelA;
 UI_Channel ChannelB;
@@ -48,11 +49,17 @@ void addCallbackforImgBtn(lv_obj_t *btn) {
     lv_obj_add_event_cb(btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
 }
 
-void refresh_channel_current(lv_obj_t *current_container, uint8_t difference)
+void refresh_channel_current(lv_obj_t *current_container, int8_t difference)
 {
     lv_obj_t *channel = lv_obj_get_parent(current_container);
     UI_Channel *ui_ch = (UI_Channel *) lv_obj_get_user_data(channel);
-    uint8_t current = ui_ch->pPlan->current_mA + difference;
+    int8_t current = ui_ch->pPlan->current_mA;
+    if (current + difference < 0)
+        current = 0;
+    else if (current + difference > 100)
+        current = 100;
+    else
+        current += difference;
     ui_ch->pPlan->current_mA = current;
 //    ui_ch->pPlan->g_chanelConfig[ui_ch->index].configParameter.current = current;
     if (ui_ch->state == UI_CHANNEL_STATE_ADDED)
@@ -64,14 +71,52 @@ void refresh_channel_current(lv_obj_t *current_container, uint8_t difference)
     }
 }
 
+void set_channel_timer_state(lv_obj_t *channel, UI_ChannelTimerState state)
+{
+    UI_Channel *ch = (UI_Channel *) lv_obj_get_user_data(channel);
+    lv_obj_t *timer_container = lv_obj_get_child(channel, 1);
+    ch->timer.state = state;
+    if (ch->timer.state == UI_TIMER_STATE_STOP)
+    {
+        lv_obj_set_style_bg_color(timer_container, lv_color_hex(0xEFF4FE), 0);
+        //TODO: Implement timer stop logic
+    }
+    else if (ch->timer.state == UI_TIMER_STATE_START)
+    {
+        lv_obj_set_style_bg_color(timer_container, lv_color_hex(0xA9EAE3), 0);
+        //TODO: Implement timer start logic
+    }
+}
 
 void set_channel_state(lv_obj_t *channel, UI_ChannelState state) {
     UI_Channel *ch = (UI_Channel *) lv_obj_get_user_data(channel);
+    ch->prev_state = ch->state;
     ch->state = state;
-    lv_obj_clean(channel);
     if (state == UI_CHANNEL_STATE_DISABLED) {
+        if (ch->prev_state == UI_CHANNEL_STATE_ADDED)
+        {
+            lv_obj_t *current_adjust_container = lv_obj_get_child(channel, 2);
+            lv_obj_t *add_btn = lv_obj_get_child(current_adjust_container, 0);
+            lv_obj_t *sub_btn = lv_obj_get_child(current_adjust_container, 1);
+            lv_obj_clear_flag(add_btn, LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_clear_flag(sub_btn, LV_OBJ_FLAG_CLICKABLE);
+        }
+        else if (ch->prev_state == UI_CHANNEL_STATE_NOT_ADDED)
+        {
+            lv_obj_t *name_label = lv_obj_get_child(channel, 0);
+            lv_obj_set_style_text_color(name_label, lv_color_hex(0xCDCDCD), 0);
 
-    } else if (state == UI_CHANNEL_STATE_NOT_ADDED) {
+            lv_obj_t *add_scheme_btn = lv_obj_get_child(lv_obj_get_child(channel, 1), 0);
+            lv_obj_clear_flag(add_scheme_btn, LV_OBJ_FLAG_CLICKABLE);
+
+            lv_obj_t *add_scheme_btn_label = lv_obj_get_child(add_scheme_btn, 0);
+            lv_obj_set_style_text_color(add_scheme_btn_label, lv_color_hex(0xCDCDCD), 0);
+
+        }
+
+    }
+    else if (state == UI_CHANNEL_STATE_NOT_ADDED) {
+        lv_obj_clean(channel);
         lv_obj_set_style_bg_color(channel, lv_color_hex(0xf5f8ff), 0);
 
         //----- channel name -----
@@ -83,6 +128,7 @@ void set_channel_state(lv_obj_t *channel, UI_ChannelState state) {
         //----- add scheme button container -----
         lv_obj_t *add_scheme_container = lv_obj_create(channel);
         lv_obj_set_size(add_scheme_container, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        lv_obj_set_style_pad_all(add_scheme_container, 0, 0);
         lv_obj_set_style_bg_opa(add_scheme_container, LV_OPA_TRANSP, 0);
         lv_obj_align(add_scheme_container, LV_ALIGN_CENTER, 0, 10);
 
@@ -91,7 +137,7 @@ void set_channel_state(lv_obj_t *channel, UI_ChannelState state) {
         lv_obj_remove_style_all(add_scheme_btn);
         lv_obj_set_style_bg_opa(add_scheme_btn, LV_OPA_TRANSP, 0);
         lv_obj_set_style_border_opa(add_scheme_btn, LV_OPA_COVER, 0);
-        lv_obj_set_size(add_scheme_btn, 100, 24);
+        lv_obj_set_size(add_scheme_btn, 170, 60);
         lv_obj_align(add_scheme_btn, LV_ALIGN_CENTER, 0, 0);
         lv_obj_add_event_cb(add_scheme_btn, AddSchemeBtnCallback, LV_EVENT_CLICKED, NULL);
 
@@ -102,7 +148,18 @@ void set_channel_state(lv_obj_t *channel, UI_ChannelState state) {
         lv_obj_set_style_text_color(add_scheme_label, lv_color_hex(0x1e827e), 0);
         lv_obj_align(add_scheme_label, LV_ALIGN_CENTER, 0, 0);
 
-    } else if (state == UI_CHANNEL_STATE_ADDED) {
+    }
+    else if (state == UI_CHANNEL_STATE_ADDED) {
+        if (ch->prev_state == UI_CHANNEL_STATE_DISABLED)
+        {
+            lv_obj_t *current_adjust_container = lv_obj_get_child(channel, 2);
+            lv_obj_t *add_btn = lv_obj_get_child(current_adjust_container, 0);
+            lv_obj_t *sub_btn = lv_obj_get_child(current_adjust_container, 1);
+            lv_obj_add_flag(add_btn, LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_flag(sub_btn, LV_OBJ_FLAG_CLICKABLE);
+            return;
+        }
+        lv_obj_clean(channel);
         lv_obj_set_style_bg_color(channel, lv_color_hex(0xffffff), 0);
 
         //----- channel name -----
@@ -110,12 +167,12 @@ void set_channel_state(lv_obj_t *channel, UI_ChannelState state) {
         lv_label_set_text(label, ch->name);
         lv_obj_set_style_text_font(label, &AliPuHui_20, 0);
         lv_obj_align(label, LV_ALIGN_TOP_LEFT, 10, 10);
+        lv_obj_add_event_cb(label, ChannelLabelClickCallback, LV_EVENT_CLICKED, channel);
+        lv_obj_add_flag(label, LV_OBJ_FLAG_CLICKABLE);
 
         //----- channel timer container -----
         lv_obj_t *timer_container = lv_obj_create(channel);
-        lv_obj_set_style_bg_color(timer_container, lv_color_hex(0xeff4fe), LV_STATE_USER_1);
-        lv_obj_set_style_bg_color(timer_container, lv_color_hex(0xA9EAE3), LV_STATE_USER_2);
-        lv_obj_add_state(timer_container, UI_TIMER_STOP_STATE);
+        lv_obj_set_style_bg_color(timer_container, lv_color_hex(0xeff4fe), 0);
         lv_obj_set_style_border_opa(timer_container, LV_OPA_TRANSP, 0);
         lv_obj_set_size(timer_container, 100, 50);
         lv_obj_align_to(timer_container, label, LV_ALIGN_OUT_BOTTOM_MID, 20, 10);
@@ -128,6 +185,8 @@ void set_channel_state(lv_obj_t *channel, UI_ChannelState state) {
         lv_label_set_text_fmt(timer_label, "%02d:%02d", ch->timer.timer_min, ch->timer.timer_sec);
         lv_obj_set_style_text_font(timer_label, &lv_font_montserrat_30, 0);
         lv_obj_align(timer_label, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_add_event_cb(timer_label, TimerLabelClickCallback, LV_EVENT_CLICKED, channel);
+        lv_obj_add_flag(timer_label, LV_OBJ_FLAG_CLICKABLE);
 
         //----- channel current adjustment container -----
         static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(2), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
@@ -209,6 +268,7 @@ lv_obj_t *create_channel(lv_obj_t *parent, UI_Channel *ch) {
     //----- channel container -----
     lv_obj_t *channel = lv_obj_create(parent);
     lv_obj_set_size(channel, 420, 50);
+    lv_obj_set_style_border_opa(channel, LV_OPA_TRANSP, 0);
     lv_obj_set_flex_grow(channel, 1);
 
     lv_obj_set_user_data(channel, ch);
@@ -224,6 +284,7 @@ lv_obj_t *create_top_bar(lv_obj_t *scr, bool is_main_scr)
     lv_obj_align(top_bar, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_bg_opa(top_bar, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_opa(top_bar, LV_OPA_TRANSP, 0);
+    lv_obj_clear_flag(top_bar, LV_OBJ_FLAG_SCROLLABLE);
     if (is_main_scr)
     {
         lv_obj_t *child_lock_btn = lv_imgbtn_create(top_bar);
@@ -231,6 +292,9 @@ lv_obj_t *create_top_bar(lv_obj_t *scr, bool is_main_scr)
         lv_obj_set_size(child_lock_btn, LockIconTransparent_fit.header.w, LockIconTransparent_fit.header.h);
         lv_obj_align(child_lock_btn, LV_ALIGN_LEFT_MID, 0, 0);
         addCallbackforImgBtn(child_lock_btn);
+        lv_obj_add_event_cb(child_lock_btn, ChildLockBtnCallback, LV_EVENT_CLICKED, NULL);
+        static bool is_locked = false;
+        lv_obj_set_user_data(child_lock_btn, &is_locked);
     }
     else
     {
@@ -295,6 +359,9 @@ lv_obj_t *create_main_scr() {
     lv_obj_align(stimulation_start_btn, LV_ALIGN_BOTTOM_MID, 0, -50);
     lv_obj_set_size(stimulation_start_btn, StartButton_Green_fit.header.w, StartButton_Green_fit.header.h);
     addCallbackforImgBtn(stimulation_start_btn);
+    static bool is_stimulation_running = false;
+    lv_obj_set_user_data(stimulation_start_btn, &is_stimulation_running);
+    lv_obj_add_event_cb(stimulation_start_btn, StimulationStartBtnCallback, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *stimulation_start_label = lv_label_create(scr);
     lv_label_set_text(stimulation_start_label, "全部开始");
@@ -502,10 +569,43 @@ lv_obj_t *create_calib_scr()
     return scr;
 }
 
+lv_obj_t *create_charging_scr()
+{
+    lv_obj_t *scr = lv_img_create(NULL);
+    lv_img_set_src(scr, &BG1_fit);
+
+    lv_obj_t *charging_ring = lv_img_create(scr);
+    lv_img_set_src(charging_ring, &ChargeRing_fit);
+    lv_obj_align(charging_ring, LV_ALIGN_CENTER, 0, -90);
+
+    lv_obj_t *soc_label = lv_label_create(charging_ring);
+    lv_label_set_text(soc_label, "80");
+    lv_obj_set_style_text_font(soc_label, &AliPuHui_70, 0);
+    lv_obj_align(soc_label, LV_ALIGN_CENTER, -3, 5);
+
+    lv_obj_t *percent_label = lv_label_create(charging_ring);
+    lv_label_set_text(percent_label, "%");
+    lv_obj_set_style_text_font(percent_label, &lv_font_montserrat_30, 0);
+    lv_obj_align_to(percent_label, soc_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 0, -10);
+
+    lv_obj_t *lighting_icon = lv_img_create(scr);
+    lv_img_set_src(lighting_icon, &LightningSymbol_fit);
+    lv_obj_align(lighting_icon, LV_ALIGN_CENTER, 0, 178);
+
+    lv_obj_t *charging_label = lv_label_create(scr);
+    lv_label_set_text(charging_label, "正在充电");
+    lv_obj_set_style_text_font(charging_label, &AliPuHui_30, 0);
+    lv_obj_set_style_text_color(charging_label, lv_color_hex(0x9AC7C0), 0);
+    lv_obj_align_to(charging_label, lighting_icon, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+
+    return scr;
+}
+
 void CustomUI() {
     main_scr = create_main_scr();
     scheme_scr = create_scheme_scr();
     calib_scr = create_calib_scr();
+    charging_scr = create_charging_scr();
+//    lv_scr_load(charging_scr);
     lv_scr_load(main_scr);
-
 }
