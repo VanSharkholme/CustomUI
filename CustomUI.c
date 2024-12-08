@@ -49,6 +49,71 @@ void addCallbackforImgBtn(lv_obj_t *btn) {
     lv_obj_add_event_cb(btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
 }
 
+lv_obj_t *create_current_warning_modal()
+{
+    lv_obj_t *modal_container = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(modal_container, lv_obj_get_width(lv_scr_act()), lv_obj_get_height(lv_scr_act()));
+    lv_obj_set_style_bg_opa(modal_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(modal_container, LV_OPA_TRANSP, 0);
+
+    lv_obj_t *modal_bg = lv_obj_create(modal_container);
+    lv_obj_set_size(modal_bg, 292, 178);
+    lv_obj_set_style_bg_color(modal_bg, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(modal_bg, LV_OPA_80, 0);
+    lv_obj_set_style_border_width(modal_bg, 0, 0);
+    lv_obj_set_style_pad_all(modal_bg, 0, 0);
+    lv_obj_center(modal_bg);
+    lv_obj_add_flag(modal_bg, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_t *modal_title = lv_obj_create(modal_bg);
+    lv_obj_set_size(modal_title, 292, 70);
+    lv_obj_set_style_bg_opa(modal_title, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(modal_title, 0, 0);
+
+    lv_obj_t *warning_icon = lv_img_create(modal_title);
+    lv_img_set_src(warning_icon, &WarningIcon_fit);
+    lv_obj_align(warning_icon, LV_ALIGN_OUT_LEFT_MID, 0, 0);
+
+    lv_obj_t *modal_title_label = lv_label_create(modal_title);
+    lv_label_set_text(modal_title_label, "提示");
+    lv_obj_set_style_text_color(modal_title_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(modal_title_label, &AliPuHui_30, 0);
+    lv_obj_align_to(modal_title_label, warning_icon, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+
+    lv_obj_t *modal_content = lv_obj_create(modal_bg);
+    lv_obj_set_size(modal_content, 292, LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(modal_content, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(modal_content, 0, 0);
+    lv_obj_center(modal_content);
+
+    lv_obj_t *modal_content_label = lv_label_create(modal_content);
+    lv_label_set_text(modal_content_label, "电流已超过50\n是否继续上调？");
+    lv_obj_set_style_text_color(modal_content_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(modal_content_label, &AliPuHui_24, 0);
+    lv_obj_center(modal_content_label);
+
+    lv_obj_t *modal_btn_container = lv_obj_create(modal_bg);
+    lv_obj_set_size(modal_btn_container, 292, 60);
+    lv_obj_set_style_bg_opa(modal_btn_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(modal_btn_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(modal_btn_container, 0, 0);
+    lv_obj_align(modal_btn_container, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_clear_flag(modal_btn_container, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *modal_btn_cancel_label = lv_label_create(modal_btn_container);
+    lv_label_set_text(modal_btn_cancel_label, "取消");
+    lv_obj_set_style_text_color(modal_btn_cancel_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(modal_btn_cancel_label, &AliPuHui_24, 0);
+    lv_obj_align(modal_btn_cancel_label, LV_ALIGN_LEFT_MID, 30, 0);
+
+    lv_obj_t *modal_btn_confirm_label = lv_label_create(modal_btn_container);
+    lv_label_set_text(modal_btn_confirm_label, "继续");
+    lv_obj_set_style_text_color(modal_btn_confirm_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(modal_btn_confirm_label, &AliPuHui_24, 0);
+    lv_obj_align(modal_btn_confirm_label, LV_ALIGN_RIGHT_MID, -30, 0);
+
+}
+
 void refresh_channel_current(lv_obj_t *current_container, int8_t difference)
 {
     lv_obj_t *channel = lv_obj_get_parent(current_container);
@@ -56,6 +121,8 @@ void refresh_channel_current(lv_obj_t *current_container, int8_t difference)
     int8_t current = ui_ch->pPlan->current_mA;
     if (current + difference < 0)
         current = 0;
+    else if (current + difference > 50)
+        create_current_warning_modal();
     else if (current + difference > 100)
         current = 100;
     else
@@ -240,8 +307,34 @@ void set_channel_state(lv_obj_t *channel, UI_ChannelState state) {
         lv_label_set_text(ma_label, "mA");
         lv_obj_set_style_text_font(ma_label, &AliPuHui_20, 0);
         lv_obj_align_to(ma_label, current_label, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
-    } else if (state == UI_CHANNEL_STATE_DROPPED) {
+    }
+    else if (state == UI_CHANNEL_STATE_DROPPED) {
+        lv_obj_t *modal_bg = lv_obj_create(channel);
+//        lv_obj_set_style_pad_all(channel, 0, 0);
+        lv_obj_set_size(modal_bg, lv_obj_get_width(channel), lv_obj_get_height(channel));
+        lv_obj_center(modal_bg);
+        lv_obj_set_style_bg_color(modal_bg, lv_color_black(), 0);
+        lv_obj_set_style_bg_opa(modal_bg, LV_OPA_80, 0);
+        lv_obj_set_style_border_width(modal_bg, 0, 0);
+        lv_obj_set_style_pad_all(modal_bg, 0, 0);
+        lv_obj_set_style_radius(modal_bg, 8, 0);
 
+        lv_obj_t *warning_icon = lv_img_create(modal_bg);
+        lv_img_set_src(warning_icon, &WarningIcon_fit);
+        lv_obj_align(warning_icon, LV_ALIGN_CENTER, -70, 0);
+
+        lv_obj_t *label = lv_label_create(modal_bg);
+        lv_label_set_text(label, "电极片脱落");
+        lv_obj_align(label, LV_ALIGN_CENTER, 20, 0);
+        lv_obj_set_style_text_font(label, &AliPuHui_24, 0);
+        lv_obj_set_style_text_color(label, lv_color_white(), 0);
+
+        lv_obj_t *obj = lv_obj_create(modal_bg);
+        lv_obj_set_size(obj,LV_PCT(100),LV_PCT(100));
+        lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_opa(obj, LV_OPA_COVER, 0);
+        lv_obj_align(obj, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_add_event_cb(obj, DropModalDelCallback, LV_EVENT_CLICKED, channel);
     }
 }
 
@@ -268,6 +361,7 @@ lv_obj_t *create_channel(lv_obj_t *parent, UI_Channel *ch) {
     //----- channel container -----
     lv_obj_t *channel = lv_obj_create(parent);
     lv_obj_set_size(channel, 420, 50);
+    lv_obj_clear_flag(channel, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_opa(channel, LV_OPA_TRANSP, 0);
     lv_obj_set_flex_grow(channel, 1);
 
@@ -553,7 +647,7 @@ lv_obj_t *create_calib_scr()
     lv_obj_align(posture_demo_img, LV_ALIGN_CENTER, 0, -50);
 
     lv_obj_t *progress_bar = lv_bar_create(scr);
-    lv_obj_set_size(progress_bar, 300, 10);
+    lv_obj_set_size(progress_bar, 300, 20);
     lv_obj_align(progress_bar, LV_ALIGN_CENTER, 0, 100);
     static lv_grad_dsc_t grad_dsc;
     grad_dsc.dir = LV_GRAD_DIR_HOR;
@@ -565,6 +659,29 @@ lv_obj_t *create_calib_scr()
     lv_bar_set_range(progress_bar, 0, 100);
     lv_bar_set_value(progress_bar, 80, LV_ANIM_OFF);
     lv_obj_set_style_bg_grad(progress_bar, &grad_dsc, LV_PART_INDICATOR);
+    lv_obj_add_event_cb(progress_bar, ProgressBarIndicatorCallback, LV_EVENT_DRAW_PART_END, NULL);
+
+    lv_obj_t *label = lv_label_create(scr);
+    lv_label_set_text(label, "第一次");
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 160);
+    lv_obj_set_style_text_font(label, &AliPuHui_30, 0);
+
+    lv_obj_t *start_btn_container = lv_obj_create(scr);
+    lv_obj_set_size(start_btn_container, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_align(start_btn_container, LV_ALIGN_BOTTOM_MID, 0, -150);
+    lv_obj_set_style_bg_opa(start_btn_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(start_btn_container, LV_OPA_TRANSP, 0);
+
+    lv_obj_t *calib_start_btn = lv_imgbtn_create(start_btn_container);
+    lv_imgbtn_set_src(calib_start_btn, LV_IMGBTN_STATE_RELEASED, NULL, &StartIconTransparent_fit, NULL);
+    lv_obj_set_size(calib_start_btn, StartIconTransparent_fit.header.w, StartIconTransparent_fit.header.h);
+    addCallbackforImgBtn(calib_start_btn);
+    lv_obj_align(calib_start_btn, LV_ALIGN_LEFT_MID, 0, 0);
+
+    lv_obj_t *calib_start_label = lv_label_create(start_btn_container);
+    lv_label_set_text(calib_start_label, "开始校准");
+    lv_obj_set_style_text_font(calib_start_label, &AliPuHui_30, 0);
+    lv_obj_align_to(calib_start_label, calib_start_btn, LV_ALIGN_OUT_RIGHT_MID, 20, 0);
 
     return scr;
 }

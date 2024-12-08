@@ -154,7 +154,7 @@ void SyncAdjustBtnCallback(lv_event_t *event)
 
     lv_obj_t *sync_adjust_container = lv_obj_create(modal_bg);
     lv_obj_set_size(sync_adjust_container, 300, 400);
-    lv_obj_align(sync_adjust_container, LV_ALIGN_CENTER, 0, -50);
+    lv_obj_align(sync_adjust_container, LV_ALIGN_CENTER, 0, -120);
     lv_obj_set_style_bg_opa(sync_adjust_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_opa(sync_adjust_container, LV_OPA_TRANSP, 0);
 
@@ -194,7 +194,7 @@ void SyncAdjustBtnCallback(lv_event_t *event)
     lv_obj_t *confirm_btn = lv_imgbtn_create(modal_bg);
     lv_imgbtn_set_src(confirm_btn, LV_IMGBTN_STATE_RELEASED, NULL, &ConfirmButtonBig_fit, NULL);
     lv_obj_set_size(confirm_btn, ConfirmButtonBig_fit.header.w, ConfirmButtonBig_fit.header.h);
-    lv_obj_align(confirm_btn, LV_ALIGN_BOTTOM_MID, 0, -160);
+    lv_obj_align(confirm_btn, LV_ALIGN_BOTTOM_MID, 0, -220);
     lv_obj_add_event_cb(confirm_btn, SyncConfirmBtnCallback, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(confirm_btn, ImgBtnPressedCallback, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(confirm_btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
@@ -202,7 +202,7 @@ void SyncAdjustBtnCallback(lv_event_t *event)
     lv_obj_t *cancel_btn = lv_imgbtn_create(modal_bg);
     lv_imgbtn_set_src(cancel_btn, LV_IMGBTN_STATE_RELEASED, NULL, &CancelButtonBig_fit, NULL);
     lv_obj_set_size(cancel_btn, CancelButtonBig_fit.header.w, CancelButtonBig_fit.header.h);
-    lv_obj_align(cancel_btn, LV_ALIGN_BOTTOM_MID, 0, -80);
+    lv_obj_align(cancel_btn, LV_ALIGN_BOTTOM_MID, 0, -140);
     lv_obj_add_event_cb(cancel_btn, CancelBtnCallback, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(cancel_btn, ImgBtnPressedCallback, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(cancel_btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
@@ -364,8 +364,14 @@ void StimulationStartBtnCallback(lv_event_t *event)
         for (int i = 0; i < 4; ++i) {
             lv_obj_t *channel = get_channel_by_index(i);
             UI_Channel *ch = (UI_Channel *) lv_obj_get_user_data(channel);
-            if (ch->state == UI_CHANNEL_STATE_ADDED && ch->timer.state == UI_TIMER_STATE_STOP)
-                set_channel_timer_state(channel, UI_TIMER_STATE_START);
+            if (i == 2) { // 模拟阻抗测试未通过
+                if (ch->state == UI_CHANNEL_STATE_ADDED && ch->timer.state == UI_TIMER_STATE_STOP)
+                    set_channel_state(channel, UI_CHANNEL_STATE_DROPPED);
+            }
+            else {
+                if (ch->state == UI_CHANNEL_STATE_ADDED && ch->timer.state == UI_TIMER_STATE_STOP)
+                    set_channel_timer_state(channel, UI_TIMER_STATE_START);
+            }
         }
     }
     else {
@@ -376,6 +382,15 @@ void StimulationStartBtnCallback(lv_event_t *event)
             if (ch->state == UI_CHANNEL_STATE_ADDED && ch->timer.state == UI_TIMER_STATE_START)
                 set_channel_timer_state(channel, UI_TIMER_STATE_STOP);
         }
+    }
+}
+
+void DropModalDelCallback(lv_event_t *event)
+{
+    lv_obj_t *channel = lv_event_get_user_data(event);
+    UI_Channel *ch = (UI_Channel*)lv_obj_get_user_data(channel);
+    if (ch->state == UI_CHANNEL_STATE_DROPPED && 1) {// 1代表阻抗测试通过
+        set_channel_state(channel, UI_CHANNEL_STATE_ADDED);
     }
 }
 
@@ -398,7 +413,7 @@ void ChannelLabelClickCallback(lv_event_t *event)
     lv_obj_set_style_border_width(modal_container, 0, 0);
     lv_obj_add_flag(modal_container, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(modal_container, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_event_cb(modal_container, ModalDelCallback, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(modal_container, ModalDelCallback, LV_EVENT_CLICKED, modal_container);
 
     lv_obj_t *modal_bg = lv_obj_create(modal_container);
     lv_obj_set_size(modal_bg,LV_PCT(100), 500);
@@ -438,6 +453,42 @@ void ChannelLabelClickCallback(lv_event_t *event)
     lv_obj_set_style_text_font(pulse_width_label, &AliPuHui_28, 0);
     lv_obj_set_style_text_color(pulse_width_label, lv_color_white(), 0);
     lv_obj_align(pulse_width_label, LV_ALIGN_TOP_LEFT, 30, 200);
+}
 
+void ProgressBarIndicatorCallback(lv_event_t * event)
+{
+    lv_obj_draw_part_dsc_t * dsc = lv_event_get_draw_part_dsc(event);
+    if(dsc->part != LV_PART_INDICATOR) return;
 
+    lv_obj_t * obj = lv_event_get_target(event);
+
+    lv_draw_label_dsc_t label_dsc;
+    lv_draw_label_dsc_init(&label_dsc);
+    label_dsc.font = LV_FONT_DEFAULT;
+
+    char buf[8];
+    lv_snprintf(buf, sizeof(buf), "%d", (int)lv_bar_get_value(obj));
+
+    lv_point_t txt_size;
+    lv_txt_get_size(&txt_size, buf, label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX,
+                    label_dsc.flag);
+
+    lv_area_t txt_area;
+    /*If the indicator is long enough put the text inside on the right*/
+    if(lv_area_get_width(dsc->draw_area) > txt_size.x + 20) {
+        txt_area.x2 = dsc->draw_area->x2 - 5;
+        txt_area.x1 = txt_area.x2 - txt_size.x + 1;
+        label_dsc.color = lv_color_white();
+    }
+        /*If the indicator is still short put the text out of it on the right*/
+    else {
+        txt_area.x1 = dsc->draw_area->x2 + 5;
+        txt_area.x2 = txt_area.x1 + txt_size.x - 1;
+        label_dsc.color = lv_color_black();
+    }
+
+    txt_area.y1 = dsc->draw_area->y1 + (lv_area_get_height(dsc->draw_area) - txt_size.y) / 2;
+    txt_area.y2 = txt_area.y1 + txt_size.y - 1;
+
+    lv_draw_label(dsc->draw_ctx, &label_dsc, &txt_area, buf, NULL);
 }

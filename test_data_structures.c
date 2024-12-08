@@ -17,7 +17,7 @@ Plan test_plans[5] ={
         },
         {
             .name = "肌力增强--上臂",
-            .current_mA = 30,
+            .current_mA = 50,
             .total_time_min = 10,
         },
         {
