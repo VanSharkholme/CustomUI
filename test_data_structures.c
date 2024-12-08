@@ -35,72 +35,133 @@ Plan test_plans[5] ={
 SchemeSet schemeSet1 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+                &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]
+        }
 };
 
 SchemeSet schemeSet2 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet3 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet4 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet5 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 
 SchemeSet schemeSet6 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet7 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet8 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet9 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet10 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet11 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };
 
 SchemeSet schemeSet12 = {
         .name = "神经肌肉电刺激",
         .plan_num = 5,
-        .plans = test_plans
+        .plans = {
+        &test_plans[0],
+                &test_plans[1],
+                &test_plans[2],
+                &test_plans[3],
+                &test_plans[4]}
 };

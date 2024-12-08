@@ -34,6 +34,9 @@ void ChannelLabelClickCallback(lv_event_t *event);
 void ModalDelCallback(lv_event_t *event);
 void DropModalDelCallback(lv_event_t *event);
 void ProgressBarIndicatorCallback(lv_event_t * event);
+void CurrentWarningModalCancelCallback(lv_event_t *event);
+void CurrentWarningModalConfirmCallback(lv_event_t *event);
+void CurrentWarningModalCloseCallback(lv_event_t *event);
 
 
 #endif //LVGL_CALLBACKS_H

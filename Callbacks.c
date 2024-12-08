@@ -40,8 +40,8 @@ void SchemeDropdownCallback(lv_event_t *event)
     UI_Channel *ch = (UI_Channel *)lv_obj_get_user_data(channel);
     uint8_t plan_index = lv_dropdown_get_selected(scheme_set_dropdown);
     ch->pPlan = lv_mem_alloc(sizeof(Plan));
-    memcpy(ch->pPlan, &scheme_set->plans[plan_index], sizeof(Plan));
-    ch->timer.timer_min = scheme_set->plans[plan_index].total_time_min;
+    memcpy(ch->pPlan, scheme_set->plans[plan_index], sizeof(Plan));
+    ch->timer.timer_min = scheme_set->plans[plan_index]->total_time_min;
     ch->timer.timer_sec = 0;
     set_channel_state(channel, UI_CHANNEL_STATE_ADDED);
     lv_scr_load(main_scr);
@@ -491,4 +491,19 @@ void ProgressBarIndicatorCallback(lv_event_t * event)
     txt_area.y2 = txt_area.y1 + txt_size.y - 1;
 
     lv_draw_label(dsc->draw_ctx, &label_dsc, &txt_area, buf, NULL);
+}
+
+void CurrentWarningModalCancelCallback(lv_event_t *event)
+{
+    lv_obj_t *obj = lv_event_get_user_data(event);
+    lv_obj_del_async(obj);
+}
+
+void CurrentWarningModalConfirmCallback(lv_event_t *event)
+{
+    lv_obj_t *obj = lv_event_get_user_data(event);
+    lv_obj_t *current_container = lv_obj_get_user_data(obj);
+    set_channel_current_by_force(current_container, 51);
+    lv_obj_del_async(obj);
+
 }

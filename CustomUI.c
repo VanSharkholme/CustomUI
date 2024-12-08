@@ -49,12 +49,13 @@ void addCallbackforImgBtn(lv_obj_t *btn) {
     lv_obj_add_event_cb(btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
 }
 
-lv_obj_t *create_current_warning_modal()
+lv_obj_t *create_current_warning_modal(lv_obj_t *current_container)
 {
     lv_obj_t *modal_container = lv_obj_create(lv_scr_act());
     lv_obj_set_size(modal_container, lv_obj_get_width(lv_scr_act()), lv_obj_get_height(lv_scr_act()));
     lv_obj_set_style_bg_opa(modal_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_opa(modal_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_user_data(modal_container, current_container);
 
     lv_obj_t *modal_bg = lv_obj_create(modal_container);
     lv_obj_set_size(modal_bg, 292, 178);
@@ -105,13 +106,32 @@ lv_obj_t *create_current_warning_modal()
     lv_obj_set_style_text_color(modal_btn_cancel_label, lv_color_white(), 0);
     lv_obj_set_style_text_font(modal_btn_cancel_label, &AliPuHui_24, 0);
     lv_obj_align(modal_btn_cancel_label, LV_ALIGN_LEFT_MID, 30, 0);
+    lv_obj_add_event_cb(modal_btn_cancel_label, CurrentWarningModalCancelCallback, LV_EVENT_CLICKED, modal_container);
+    lv_obj_add_flag(modal_btn_cancel_label, LV_OBJ_FLAG_CLICKABLE);
 
     lv_obj_t *modal_btn_confirm_label = lv_label_create(modal_btn_container);
     lv_label_set_text(modal_btn_confirm_label, "继续");
     lv_obj_set_style_text_color(modal_btn_confirm_label, lv_color_white(), 0);
     lv_obj_set_style_text_font(modal_btn_confirm_label, &AliPuHui_24, 0);
     lv_obj_align(modal_btn_confirm_label, LV_ALIGN_RIGHT_MID, -30, 0);
+    lv_obj_add_event_cb(modal_btn_confirm_label, CurrentWarningModalConfirmCallback, LV_EVENT_CLICKED, modal_container);
+    lv_obj_add_flag(modal_btn_confirm_label, LV_OBJ_FLAG_CLICKABLE);
 
+    return modal_container;
+}
+
+void set_channel_current_by_force(lv_obj_t *current_container, uint8_t current)
+{
+    lv_obj_t *channel = lv_obj_get_parent(current_container);
+    UI_Channel *ui_ch = (UI_Channel *) lv_obj_get_user_data(channel);
+    ui_ch->pPlan->current_mA = current;
+    if (ui_ch->state == UI_CHANNEL_STATE_ADDED)
+    {
+        lv_obj_t *current_arc = lv_obj_get_child(current_container, 2);
+        lv_arc_set_value(current_arc, current);
+        lv_obj_t *current_label = lv_obj_get_child(current_arc, 0);
+        lv_label_set_text_fmt(current_label, "%d", current);
+    }
 }
 
 void refresh_channel_current(lv_obj_t *current_container, int8_t difference)
@@ -121,8 +141,10 @@ void refresh_channel_current(lv_obj_t *current_container, int8_t difference)
     int8_t current = ui_ch->pPlan->current_mA;
     if (current + difference < 0)
         current = 0;
-    else if (current + difference > 50)
-        create_current_warning_modal();
+    else if (current + difference == 51 && difference > 0)
+    {
+        create_current_warning_modal(current_container);
+    }
     else if (current + difference > 100)
         current = 100;
     else
@@ -513,7 +535,7 @@ lv_obj_t *create_scheme_set(lv_obj_t *parent, SchemeSet *schemeSet) {
     lv_obj_set_style_text_font(scheme_list, &AliPuHui_20, 0);
     for (int i = 0; i < schemeSet->plan_num; i++) {
 //        sprintf(option_str, "%s\n", schemeSet->plans[i].name);
-        lv_dropdown_add_option(scheme_set_dropdown, schemeSet->plans[i].name, i);
+        lv_dropdown_add_option(scheme_set_dropdown, schemeSet->plans[i]->name, i);
     }
 
 

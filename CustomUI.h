@@ -102,7 +102,7 @@ typedef struct {
 
 typedef struct {
     char *name;
-    Plan *plans;
+    Plan *plans[15];
     uint8_t plan_num;
 } SchemeSet;
 
@@ -131,8 +131,9 @@ void clear_all_channels();
 void set_channel_state(lv_obj_t *channel, UI_ChannelState state);
 void set_scheme_set_page(lv_obj_t *container, uint8_t page);
 void refresh_channel_current(lv_obj_t *current_container, int8_t difference);
+void set_channel_current_by_force(lv_obj_t *channel, uint8_t current);
 lv_obj_t *get_channel_by_index(uint8_t index);
-void set_channel_timer_state(lv_obj_t *channel, UI_ChannelTimerState state);
+void set_channel_timer_state(lv_obj_t *current_container, UI_ChannelTimerState state);
 void CustomUI();
 
 #endif //LVGL_CUSTOMUI_H
