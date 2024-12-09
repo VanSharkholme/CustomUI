@@ -392,6 +392,48 @@ lv_obj_t *create_channel(lv_obj_t *parent, UI_Channel *ch) {
     return channel;
 }
 
+void set_battery_level(uint8_t soc)
+{
+    lv_obj_t *scr = lv_disp_get_scr_act(NULL);
+    lv_obj_t *top_bar = lv_obj_get_child(scr, 0);
+    lv_obj_t *empty_battery = lv_obj_get_child(top_bar, 1);
+    lv_obj_t *battery_level1 = lv_obj_get_child(empty_battery, 0);
+    lv_obj_t *battery_level2 = lv_obj_get_child(empty_battery, 1);
+    lv_obj_t *battery_level3 = lv_obj_get_child(empty_battery, 2);
+    lv_obj_t *battery_level4 = lv_obj_get_child(empty_battery, 3);
+
+    if (75 < soc && soc <= 100) {
+        lv_obj_clear_flag(battery_level1, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(battery_level2, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(battery_level3, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(battery_level4, LV_OBJ_FLAG_HIDDEN);
+    }
+    else if (50 < soc && soc <= 75) {
+        lv_obj_clear_flag(battery_level1, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(battery_level2, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(battery_level3, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level4, LV_OBJ_FLAG_HIDDEN);
+    }
+    else if (25 < soc && soc <= 50) {
+        lv_obj_clear_flag(battery_level1, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(battery_level2, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level3, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level4, LV_OBJ_FLAG_HIDDEN);
+    }
+    else if (5 < soc && soc <= 25) {
+        lv_obj_clear_flag(battery_level1, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level2, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level3, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level4, LV_OBJ_FLAG_HIDDEN);
+    }
+    else {
+        lv_obj_add_flag(battery_level1, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level2, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level3, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(battery_level4, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
 lv_obj_t *create_top_bar(lv_obj_t *scr, bool is_main_scr)
 {
 
@@ -422,8 +464,24 @@ lv_obj_t *create_top_bar(lv_obj_t *scr, bool is_main_scr)
         lv_obj_add_event_cb(back_btn, BackBtnCallback, LV_EVENT_CLICKED, NULL);
     }
     lv_obj_t *battery_icon = lv_img_create(top_bar);
-    lv_img_set_src(battery_icon, &BatteryIcon_fit);
+    lv_img_set_src(battery_icon, &EmptyBattery_fit);
     lv_obj_align(battery_icon, LV_ALIGN_RIGHT_MID, 0, 0);
+
+    lv_obj_t *battery_level_1 = lv_img_create(battery_icon);
+    lv_img_set_src(battery_level_1, &BatteryBar_fit);
+    lv_obj_align(battery_level_1, LV_ALIGN_LEFT_MID, 3, 0);
+
+    lv_obj_t *battery_level_2 = lv_img_create(battery_icon);
+    lv_img_set_src(battery_level_2, &BatteryBar_fit);
+    lv_obj_align_to(battery_level_2, battery_level_1, LV_ALIGN_OUT_RIGHT_MID, 2, 0);
+
+    lv_obj_t *battery_level_3 = lv_img_create(battery_icon);
+    lv_img_set_src(battery_level_3, &BatteryBar_fit);
+    lv_obj_align_to(battery_level_3, battery_level_2, LV_ALIGN_OUT_RIGHT_MID, 2, 0);
+
+    lv_obj_t *battery_level_4 = lv_img_create(battery_icon);
+    lv_img_set_src(battery_level_4, &BatteryBar_fit);
+    lv_obj_align_to(battery_level_4, battery_level_3, LV_ALIGN_OUT_RIGHT_MID, 2, 0);
 
     lv_obj_t *bluetooth_btn = lv_imgbtn_create(top_bar);
     lv_imgbtn_set_src(bluetooth_btn, LV_IMGBTN_STATE_RELEASED, NULL, &BluetoothIcon_fit, NULL);

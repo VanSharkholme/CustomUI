@@ -47,6 +47,8 @@ LV_IMG_DECLARE(SyncAdjust_fit)
 LV_IMG_DECLARE(SyncAdjust_bg_fit)
 LV_IMG_DECLARE(WarningIcon_fit)
 LV_IMG_DECLARE(BackButton_fit)
+LV_IMG_DECLARE(BatteryBar_fit)
+LV_IMG_DECLARE(EmptyBattery_fit)
 
 LV_FONT_DECLARE(AliPuHui_20)
 LV_FONT_DECLARE(AliPuHui_24)
