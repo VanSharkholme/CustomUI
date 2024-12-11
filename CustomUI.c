@@ -271,9 +271,10 @@ void set_channel_state(lv_obj_t *channel, UI_ChannelState state) {
 
         //----- channel timer label -----
         lv_obj_t *timer_label = lv_label_create(timer_container);
+        lv_obj_set_size(timer_label, 100, 50);
         lv_label_set_text_fmt(timer_label, "%02d:%02d", ch->timer.timer_min, ch->timer.timer_sec);
         lv_obj_set_style_text_font(timer_label, &lv_font_montserrat_30, 0);
-        lv_obj_align(timer_label, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_align(timer_label, LV_ALIGN_CENTER, 10, 8);
         lv_obj_add_event_cb(timer_label, TimerLabelClickCallback, LV_EVENT_CLICKED, channel);
         lv_obj_add_flag(timer_label, LV_OBJ_FLAG_CLICKABLE);
 

@@ -209,10 +209,6 @@ void SyncAdjustBtnCallback(lv_event_t *event)
 
 }
 
-void CalibBtnCallback(lv_event_t *event)
-{
-    lv_scr_load(calib_scr);
-}
 
 void TextAreaCallback(lv_event_t *event)
 {
@@ -228,7 +224,69 @@ void TextAreaCallback(lv_event_t *event)
         lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
     }
 }
+void CalibPasswordConfirmBtnCallback(lv_event_t *event)
+{
+    lv_obj_t *btn = lv_event_get_target(event);
+    lv_obj_t *modal_bg = lv_obj_get_parent(btn);
+    lv_obj_t *calib_pwd_container = lv_obj_get_child(modal_bg, 0);
+    lv_obj_t *calib_password_input = lv_obj_get_child(calib_pwd_container, 0);
+    char *calib_password = (char *)lv_textarea_get_text(calib_password_input);
+    if (strcmp(calib_password, CALIB_PWD) == 0)
+    {
+        lv_obj_del_async(modal_bg);
+        lv_scr_load(calib_scr);
+    } 
+}
+void CalibBtnCallback(lv_event_t *event)
+{
+    lv_obj_t *modal_bg = lv_obj_create(main_scr);
+    lv_obj_set_size(modal_bg, lv_obj_get_width(main_scr), lv_obj_get_height(main_scr));
+    lv_obj_set_style_bg_color(modal_bg, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(modal_bg, LV_OPA_80, 0);
+    lv_obj_set_style_border_width(modal_bg, 0, 0);
+    lv_obj_set_style_pad_all(modal_bg, 0, 0);
+    lv_obj_add_flag(modal_bg, LV_OBJ_FLAG_CLICKABLE);
 
+    lv_obj_t *calib_pwd_container = lv_obj_create(modal_bg);
+    lv_obj_set_size(calib_pwd_container, 400, 400);
+    lv_obj_align(calib_pwd_container, LV_ALIGN_CENTER, 0, -100);
+    lv_obj_set_style_bg_opa(calib_pwd_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(calib_pwd_container, LV_OPA_TRANSP, 0);
+    lv_obj_add_flag(calib_pwd_container, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_t *keyboard = lv_keyboard_create(modal_bg);
+    lv_obj_set_size(keyboard,LV_PCT(100), 300);
+    lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_event_cb(keyboard, lv_keyboard_def_event_cb);
+    lv_obj_add_event_cb(keyboard, lv_keyboard_def_event_cb, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *calib_password_input = lv_textarea_create(calib_pwd_container);
+    lv_textarea_set_placeholder_text(calib_password_input, "请输入设置密码");
+    lv_obj_set_style_text_font(calib_password_input, &AliPuHui_28, 0);
+    lv_obj_set_style_bg_color(calib_password_input, lv_color_hex(0xe3e3e3), 0);
+    lv_obj_set_style_radius(calib_password_input, 0, 0);
+    lv_obj_set_size(calib_password_input, LV_PCT(100), 55);
+    lv_obj_align(calib_password_input, LV_ALIGN_CENTER, 0, -80);
+    lv_obj_set_scroll_dir(calib_password_input, LV_DIR_HOR);
+    lv_obj_add_event_cb(calib_password_input, TextAreaCallback, LV_EVENT_ALL, keyboard);
+
+    lv_obj_t *cancel_btn = lv_imgbtn_create(modal_bg);
+    lv_imgbtn_set_src(cancel_btn, LV_IMGBTN_STATE_RELEASED, NULL, &CancelButtonBig_fit, NULL);
+    lv_obj_set_size(cancel_btn, CancelButtonBig_fit.header.w, CancelButtonBig_fit.header.h);
+    lv_obj_align_to(cancel_btn, keyboard, LV_ALIGN_OUT_TOP_MID, 0, -50);
+    lv_obj_add_event_cb(cancel_btn, CancelBtnCallback, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(cancel_btn, ImgBtnPressedCallback, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(cancel_btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
+    lv_obj_t *confirm_btn = lv_imgbtn_create(modal_bg);
+
+    lv_imgbtn_set_src(confirm_btn, LV_IMGBTN_STATE_RELEASED, NULL, &ConfirmButtonBig_fit, NULL);
+    lv_obj_set_size(confirm_btn, ConfirmButtonBig_fit.header.w, ConfirmButtonBig_fit.header.h);
+    lv_obj_align_to(confirm_btn, cancel_btn, LV_ALIGN_OUT_TOP_MID, 0, -20);
+    lv_obj_add_event_cb(confirm_btn, CalibPasswordConfirmBtnCallback, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(confirm_btn, ImgBtnPressedCallback, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(confirm_btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
+
+}
 void BTConfirmBtnCallback(lv_event_t *event)
 {
     lv_obj_t *btn = lv_event_get_target(event);
@@ -241,15 +299,8 @@ void BTConfirmBtnCallback(lv_event_t *event)
     lv_obj_del_async(modal_bg);
 }
 
-void BluetoothBtnCallback(lv_event_t *event)
+void create_bluetooth_setting_modal(lv_obj_t *modal_bg)
 {
-    lv_obj_t *modal_bg = lv_obj_create(main_scr);
-    lv_obj_set_size(modal_bg, lv_obj_get_width(main_scr), lv_obj_get_height(main_scr));
-    lv_obj_set_style_bg_color(modal_bg, lv_color_black(), 0);
-    lv_obj_set_style_bg_opa(modal_bg, LV_OPA_80, 0);
-    lv_obj_set_style_border_width(modal_bg, 0, 0);
-    lv_obj_set_style_pad_all(modal_bg, 0, 0);
-    lv_obj_add_flag(modal_bg, LV_OBJ_FLAG_CLICKABLE);
 
     lv_obj_t *bluetooth_container = lv_obj_create(modal_bg);
     lv_obj_set_size(bluetooth_container, 400, 400);
@@ -292,6 +343,71 @@ void BluetoothBtnCallback(lv_event_t *event)
     lv_obj_set_size(confirm_btn, ConfirmButtonBig_fit.header.w, ConfirmButtonBig_fit.header.h);
     lv_obj_align_to(confirm_btn, cancel_btn, LV_ALIGN_OUT_TOP_MID, 0, -20);
     lv_obj_add_event_cb(confirm_btn, BTConfirmBtnCallback, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(confirm_btn, ImgBtnPressedCallback, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(confirm_btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
+
+}
+
+void BTPasswordConfirmBtnCallback(lv_event_t *event)
+{
+    lv_obj_t *btn = lv_event_get_target(event);
+    lv_obj_t *modal_bg = lv_obj_get_parent(btn);
+    lv_obj_t *bluetooth_container = lv_obj_get_child(modal_bg, 0);
+    lv_obj_t *bluetooth_password_input = lv_obj_get_child(bluetooth_container, 0);
+    char *bluetooth_password = (char *)lv_textarea_get_text(bluetooth_password_input);
+    if (strcmp(bluetooth_password, BT_SETTING_PWD) == 0)
+    {
+        lv_obj_clean(modal_bg);
+        create_bluetooth_setting_modal(modal_bg);
+    }
+}
+
+void BluetoothBtnCallback(lv_event_t *event)
+{
+    lv_obj_t *modal_bg = lv_obj_create(main_scr);
+    lv_obj_set_size(modal_bg, lv_obj_get_width(main_scr), lv_obj_get_height(main_scr));
+    lv_obj_set_style_bg_color(modal_bg, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(modal_bg, LV_OPA_80, 0);
+    lv_obj_set_style_border_width(modal_bg, 0, 0);
+    lv_obj_set_style_pad_all(modal_bg, 0, 0);
+    lv_obj_add_flag(modal_bg, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_t *bluetooth_container = lv_obj_create(modal_bg);
+    lv_obj_set_size(bluetooth_container, 400, 400);
+    lv_obj_align(bluetooth_container, LV_ALIGN_CENTER, 0, -100);
+    lv_obj_set_style_bg_opa(bluetooth_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(bluetooth_container, LV_OPA_TRANSP, 0);
+    lv_obj_add_flag(bluetooth_container, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_t *keyboard = lv_keyboard_create(modal_bg);
+    lv_obj_set_size(keyboard,LV_PCT(100), 300);
+    lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_event_cb(keyboard, lv_keyboard_def_event_cb);
+    lv_obj_add_event_cb(keyboard, lv_keyboard_def_event_cb, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *bluetooth_password_input = lv_textarea_create(bluetooth_container);
+    lv_textarea_set_placeholder_text(bluetooth_password_input, "请输入设置密码");
+    lv_obj_set_style_text_font(bluetooth_password_input, &AliPuHui_28, 0);
+    lv_obj_set_style_bg_color(bluetooth_password_input, lv_color_hex(0xe3e3e3), 0);
+    lv_obj_set_style_radius(bluetooth_password_input, 0, 0);
+    lv_obj_set_size(bluetooth_password_input, LV_PCT(100), 55);
+    lv_obj_align(bluetooth_password_input, LV_ALIGN_CENTER, 0, -80);
+    lv_obj_set_scroll_dir(bluetooth_password_input, LV_DIR_HOR);
+    lv_obj_add_event_cb(bluetooth_password_input, TextAreaCallback, LV_EVENT_ALL, keyboard);
+
+    lv_obj_t *cancel_btn = lv_imgbtn_create(modal_bg);
+    lv_imgbtn_set_src(cancel_btn, LV_IMGBTN_STATE_RELEASED, NULL, &CancelButtonBig_fit, NULL);
+    lv_obj_set_size(cancel_btn, CancelButtonBig_fit.header.w, CancelButtonBig_fit.header.h);
+    lv_obj_align_to(cancel_btn, keyboard, LV_ALIGN_OUT_TOP_MID, 0, -50);
+    lv_obj_add_event_cb(cancel_btn, CancelBtnCallback, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(cancel_btn, ImgBtnPressedCallback, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(cancel_btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
+    lv_obj_t *confirm_btn = lv_imgbtn_create(modal_bg);
+
+    lv_imgbtn_set_src(confirm_btn, LV_IMGBTN_STATE_RELEASED, NULL, &ConfirmButtonBig_fit, NULL);
+    lv_obj_set_size(confirm_btn, ConfirmButtonBig_fit.header.w, ConfirmButtonBig_fit.header.h);
+    lv_obj_align_to(confirm_btn, cancel_btn, LV_ALIGN_OUT_TOP_MID, 0, -20);
+    lv_obj_add_event_cb(confirm_btn, BTPasswordConfirmBtnCallback, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(confirm_btn, ImgBtnPressedCallback, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(confirm_btn, ImgBtnReleasedCallback, LV_EVENT_RELEASED, NULL);
 
